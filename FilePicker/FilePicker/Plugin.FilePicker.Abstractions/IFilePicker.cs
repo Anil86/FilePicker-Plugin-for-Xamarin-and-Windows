@@ -9,6 +9,7 @@ namespace Plugin.FilePicker.Abstractions
     {
         Task<FileData> PickFile ();
 
+        Task<string> GetLocalPathAsync(string fileName);
         Task<bool> SaveFile (FileData fileToSave);
 
         void OpenFile (string fileToOpen);

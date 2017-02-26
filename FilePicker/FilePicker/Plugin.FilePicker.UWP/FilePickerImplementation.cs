@@ -86,5 +86,11 @@ namespace Plugin.FilePicker
             {
             }
         }
+
+        public async Task<string> GetLocalPathAsync(string fileName)
+        {
+            var localFolderPath = ApplicationData.Current.LocalFolder.Path;
+            return await Task.Run(() => Path.Combine(localFolderPath, fileName));
+        }
     }
 }

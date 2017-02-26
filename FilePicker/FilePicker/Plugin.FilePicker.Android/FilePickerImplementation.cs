@@ -137,5 +137,10 @@ namespace Plugin.FilePicker
 
             OpenFile (fileToOpen);
         }
+
+        public async Task<string> GetLocalPathAsync(string fileName)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
