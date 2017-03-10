@@ -7,6 +7,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.IO;
+using File = Java.IO.File;
 
 namespace Plugin.FilePicker
 {
@@ -140,7 +142,8 @@ namespace Plugin.FilePicker
 
         public async Task<string> GetLocalPathAsync(string fileName)
         {
-            throw new NotImplementedException();
+            var localFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+            return await Task.FromResult(Path.Combine(localFolderPath, fileName));
         }
     }
 }
