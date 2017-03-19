@@ -51,6 +51,7 @@
     <Compile Include="FilePickerActivity.cs" />
     <Compile Include="FilePickerImplementation.cs" />
     <Compile Include="IOUtil.cs" />
+    <Compile Include="LocalFolderFileService.cs" />
     <Compile Include="Resources\Resource.Designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

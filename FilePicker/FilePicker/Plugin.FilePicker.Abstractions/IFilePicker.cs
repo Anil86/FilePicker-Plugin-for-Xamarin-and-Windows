@@ -14,7 +14,6 @@ namespace Plugin.FilePicker.Abstractions
         Task<bool> SaveFile(FileData fileToSave, string destinationFolderName);
 
         void OpenFile (string fileToOpen);
-
         void OpenFile (FileData fileToOpen);
     }
 }

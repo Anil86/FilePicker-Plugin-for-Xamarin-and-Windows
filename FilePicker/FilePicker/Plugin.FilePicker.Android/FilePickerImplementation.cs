@@ -16,69 +16,74 @@ namespace Plugin.FilePicker
     /// Implementation for Feature
     /// </summary>
     ///
-    [Preserve (AllMembers = true)]
+    [Preserve(AllMembers = true)]
     public class FilePickerImplementation : IFilePicker
     {
         private readonly Context _context;
         private int _requestId;
         private TaskCompletionSource<FileData> _completionSource;
 
-        public FilePickerImplementation ()
+        public FilePickerImplementation()
         {
             _context = Application.Context;
         }
 
-        public async Task<FileData> PickFile ()
+        public async Task<FileData> PickFile()
         {
-            var media = await TakeMediaAsync ("file/*", Intent.ActionGetContent);
+            var media = await TakeMediaAsync("file/*", Intent.ActionGetContent);
 
             return media;
         }
 
-        private Task<FileData> TakeMediaAsync (string type, string action)
+        private Task<FileData> TakeMediaAsync(string type, string action)
         {
-            var id = GetRequestId ();
+            var id = GetRequestId();
 
-            var ntcs = new TaskCompletionSource<FileData> (id);
+            var ntcs = new TaskCompletionSource<FileData>(id);
 
-            if (Interlocked.CompareExchange (ref _completionSource, ntcs, null) != null)
-                throw new InvalidOperationException ("Only one operation can be active at a time");
+            if (Interlocked.CompareExchange(ref _completionSource, ntcs, null) != null)
+                throw new InvalidOperationException("Only one operation can be active at a time");
 
-            try {
-                var pickerIntent = new Intent (this._context, typeof (FilePickerActivity));
-                pickerIntent.SetFlags (ActivityFlags.NewTask);
+            try
+            {
+                var pickerIntent = new Intent(this._context, typeof(FilePickerActivity));
+                pickerIntent.SetFlags(ActivityFlags.NewTask);
 
-                this._context.StartActivity (pickerIntent);
+                this._context.StartActivity(pickerIntent);
 
                 EventHandler<FilePickerEventArgs> handler = null;
                 EventHandler<EventArgs> cancelledHandler = null;
 
-                handler = (s, e) => {
-                    var tcs = Interlocked.Exchange (ref _completionSource, null);
+                handler = (s, e) =>
+                {
+                    var tcs = Interlocked.Exchange(ref _completionSource, null);
 
                     FilePickerActivity.FilePicked -= handler;
 
-                    tcs?.SetResult (new FileData (e.FilePath, e.FileName, () => System.IO.File.OpenRead (e.FilePath)));
+                    tcs?.SetResult(new FileData(e.FilePath, e.FileName, () => System.IO.File.OpenRead(e.FilePath)));
                 };
 
-                cancelledHandler = (s, e) => {
-                    var tcs = Interlocked.Exchange (ref _completionSource, null);
+                cancelledHandler = (s, e) =>
+                {
+                    var tcs = Interlocked.Exchange(ref _completionSource, null);
 
                     FilePickerActivity.FilePickCancelled -= cancelledHandler;
 
-                    tcs?.SetResult (null);
+                    tcs?.SetResult(null);
                 };
 
                 FilePickerActivity.FilePickCancelled += cancelledHandler;
                 FilePickerActivity.FilePicked += handler;
-            } catch (Exception exAct) {
-                Debug.Write (exAct);
+            }
+            catch (Exception exAct)
+            {
+                Debug.Write(exAct);
             }
 
             return _completionSource.Task;
         }
 
-        private int GetRequestId ()
+        private int GetRequestId()
         {
             int id = _requestId;
 
@@ -90,65 +95,86 @@ namespace Plugin.FilePicker
             return id;
         }
 
-        public async Task<bool> SaveFile (FileData fileToSave)
+        public virtual async Task<bool> SaveFile(FileData fileToSave)
         {
-            try {
-                var myFile = new File (Android.OS.Environment.ExternalStorageDirectory, fileToSave.FileName);
+            try
+            {
+                var myFile = new File(Android.OS.Environment.ExternalStorageDirectory, fileToSave.FileName);
 
-                if (myFile.Exists ())
+                if (myFile.Exists())
                     return true;
 
-                var fos = new FileOutputStream (myFile.Path);
+                var fos = new FileOutputStream(myFile.Path);
 
-                fos.Write (fileToSave.DataArray);
-                fos.Close ();
+                fos.Write(fileToSave.DataArray);
+                fos.Close();
 
                 return true;
-            } catch (Exception ex) {
-                Debug.WriteLine (ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
                 return false;
             }
         }
 
-        public async Task<bool> SaveFile(FileData fileToSave, string destinationFolderName)
+        public virtual async Task<bool> SaveFile(FileData fileToSave, string destinationFolderName)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var externalDirectory = Android.OS.Environment.ExternalStorageDirectory;
+                Directory.CreateDirectory(Path.Combine(externalDirectory.Path, destinationFolderName));
+
+                var myFile = new File(Android.OS.Environment.ExternalStorageDirectory,
+                    Path.Combine(destinationFolderName, fileToSave.FileName));
+
+                if (myFile.Exists()) return true;
+
+                var fos = new FileOutputStream(myFile.Path);
+
+                fos.Write(fileToSave.DataArray);
+                fos.Close();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                return false;
+            }
         }
 
-        public void OpenFile (File fileToOpen)
+        public void OpenFile(File fileToOpen)
         {
-            var uri = Android.Net.Uri.FromFile (fileToOpen);
-            var intent = new Intent ();
-            var mime = IOUtil.GetMimeType (uri.ToString ());
+            var uri = Android.Net.Uri.FromFile(fileToOpen);
+            var intent = new Intent();
+            var mime = IOUtil.GetMimeType(uri.ToString());
 
-            intent.SetAction (Intent.ActionView);
-            intent.SetDataAndType (uri, mime);
-            intent.SetFlags (ActivityFlags.NewTask);
+            intent.SetAction(Intent.ActionView);
+            intent.SetDataAndType(uri, mime);
+            intent.SetFlags(ActivityFlags.NewTask);
 
-            _context.StartActivity (intent);
+            _context.StartActivity(intent);
         }
 
-        public void OpenFile (string fileToOpen)
+        public virtual void OpenFile(string fileToOpen)
         {
-            var myFile = new File (Android.OS.Environment.ExternalStorageState, fileToOpen);
+            var myFile = new File(Android.OS.Environment.ExternalStorageState, fileToOpen);
 
-            OpenFile (myFile);
+            OpenFile(myFile);
         }
 
-        public async void OpenFile (FileData fileToOpen)
+        public virtual async void OpenFile(FileData fileToOpen)
         {
-            var myFile = new File (Android.OS.Environment.ExternalStorageState, fileToOpen.FileName);
+            var myFile = new File(Android.OS.Environment.ExternalStorageState, fileToOpen.FileName);
 
-            if (!myFile.Exists ())
-                await SaveFile (fileToOpen);
+            if (!myFile.Exists())
+                await SaveFile(fileToOpen);
 
-            OpenFile (fileToOpen);
+            OpenFile(fileToOpen);
         }
 
-        public async Task<string> GetLocalPathAsync(string fileName)
-        {
-            var localFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-            return await Task.FromResult(Path.Combine(localFolderPath, fileName));
-        }
+        public virtual async Task<string> GetLocalPathAsync(string fileName) => await Task.FromResult(
+            Path.Combine(Android.OS.Environment.ExternalStorageDirectory.Path, fileName));
     }
 }
