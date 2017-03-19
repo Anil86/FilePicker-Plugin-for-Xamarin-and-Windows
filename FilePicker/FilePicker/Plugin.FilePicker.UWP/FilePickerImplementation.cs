@@ -12,7 +12,7 @@ namespace Plugin.FilePicker
     /// </summary>
     public class FilePickerImplementation : IFilePicker
     {
-        public async Task<FileData> PickFile()
+        public virtual async Task<FileData> PickFile()
         {
             var picker = new Windows.Storage.Pickers.FileOpenPicker
             {
@@ -31,11 +31,31 @@ namespace Plugin.FilePicker
             return null;
         }
 
-        public async Task<bool> SaveFile(FileData fileToSave)
+        public virtual async Task<bool> SaveFile(FileData fileToSave)
         {
             try
             {
                 var file = await ApplicationData.Current.LocalFolder.CreateFileAsync(fileToSave.FileName, CreationCollisionOption.ReplaceExisting);
+
+                await FileIO.WriteBytesAsync(file, fileToSave.DataArray);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public virtual async Task<bool> SaveFile(FileData fileToSave, string destinationFolderName)
+        {
+            try
+            {
+                var nestedFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(destinationFolderName,
+                    CreationCollisionOption.OpenIfExists);
+
+                var file =
+                    await nestedFolder.CreateFileAsync(fileToSave.FileName, CreationCollisionOption.ReplaceExisting);
 
                 await FileIO.WriteBytesAsync(file, fileToSave.DataArray);
 
@@ -90,7 +110,7 @@ namespace Plugin.FilePicker
         public async Task<string> GetLocalPathAsync(string fileName)
         {
             var localFolderPath = ApplicationData.Current.LocalFolder.Path;
-            return await Task.Run(() => Path.Combine(localFolderPath, fileName));
+            return await Task.FromResult(Path.Combine(localFolderPath, fileName));
         }
     }
 }

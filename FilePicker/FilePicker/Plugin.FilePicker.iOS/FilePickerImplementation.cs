@@ -178,6 +178,11 @@ namespace Plugin.FilePicker
             }
         }
 
+        public async Task<bool> SaveFile(FileData fileToSave, string destinationFolderName)
+        {
+            throw new NotImplementedException();
+        }
+
         public void OpenFile (NSUrl fileUrl)
         {
             var docControl = UIDocumentInteractionController.FromUrl (fileUrl);

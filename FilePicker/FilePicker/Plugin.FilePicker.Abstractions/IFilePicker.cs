@@ -11,6 +11,7 @@ namespace Plugin.FilePicker.Abstractions
 
         Task<string> GetLocalPathAsync(string fileName);
         Task<bool> SaveFile (FileData fileToSave);
+        Task<bool> SaveFile(FileData fileToSave, string destinationFolderName);
 
         void OpenFile (string fileToOpen);
 

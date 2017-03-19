@@ -110,6 +110,11 @@ namespace Plugin.FilePicker
             }
         }
 
+        public async Task<bool> SaveFile(FileData fileToSave, string destinationFolderName)
+        {
+            throw new NotImplementedException();
+        }
+
         public void OpenFile (File fileToOpen)
         {
             var uri = Android.Net.Uri.FromFile (fileToOpen);
